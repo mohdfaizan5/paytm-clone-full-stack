@@ -5,7 +5,11 @@ import { authMiddleware } from "../middlewares/middlewares.js";
 
 const route = Router();
 
-route.get("/signup", async (req, res) => {
+route.get("/", (req,res)=>{
+  res.send("working")
+})
+
+route.post("/signup", async (req, res) => {
   try {
     const { username, firstName, lastName, password } = req.body;
 

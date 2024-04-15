@@ -16,10 +16,13 @@ import accountRoutes from "./routes/account.routes.js";
 app.use("/api/v1/user/", userRoutes);
 app.use("/api/v1/account/", accountRoutes);
 
+
+const PORT = process.env.BACKEND_PORT | 5000
+
 connectDB()
   .then((res) => {
     console.log(process.env.MONGO_URI);
-    app.listen(3000, () => {
+    app.listen(PORT, () => {
       console.log("Server up✅✅");
     });
   })
