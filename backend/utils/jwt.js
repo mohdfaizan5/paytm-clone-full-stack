@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 
 const createJWT = (input) => {
   try {
+    // console.log("createJWT - input", input)
     const token = jwt.sign(input, process.env.JWT_SECRET);
     return token;
   } catch (error) {
@@ -17,7 +18,8 @@ const verifyJWT = (token) => {
       if (err) {
         return false;
       }
-      // console.log(`token verified: ${decoded.userId}`);
+      console.log(`token verified: ${decoded.userId}`);
+      console.log(`token verified: ${decoded}`);
       userId = decoded.userId;
       // return decoded.userId;
     });

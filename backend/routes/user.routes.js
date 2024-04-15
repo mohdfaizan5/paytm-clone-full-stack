@@ -46,7 +46,7 @@ route.post("/signup", async (req, res) => {
     }
   } catch (error) {
     return res.status(410).json({
-      message: "Email already taken / Incorrect inputs",
+      message: "Email already taken",
     });
   }
 });
@@ -64,21 +64,23 @@ route.post("/signin", async (req, res) => {
       username,
     });
 
+    if (!foundUser) {
+      return res.status(411).json({
+        message: "User not found",
+      });
+    }
+
     if (foundUser.password != password) {
       return res.status(411).json({ message: "Invalid password" });
     }
 
-    console.log(foundUser);
+    // console.log(foundUser._id, foundUser);
 
     const token = createJWT({ userId: foundUser._id });
-
+    
     if (foundUser) {
       res.status(200).json({
         token: token,
-      });
-    } else {
-      res.status(411).json({
-        message: "User not found",
       });
     }
   } catch (error) {
@@ -126,10 +128,10 @@ route.get("/bulk", authMiddleware, async (req, res) => {
   // console.log(`user id ${req.userId}`);
   const { filter } = req.query;
 
-  const foundResults = await User.find({ username: {"$regex": filter} });
+  const foundResults = await User.find({ username: { $regex: filter } });
 
   // User.find(/* This is needed so users can search for their friends and send them money */);
-  console.log(foundResults)
+  console.log(foundResults);
   if (foundResults) {
     return res.status(200).json({ users: foundResults });
   }
