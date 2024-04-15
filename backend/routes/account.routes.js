@@ -1,30 +1,33 @@
 import { Router } from "express";
 import Account from "../models/user/account.model.js";
+import { authMiddleware } from "../middlewares/auth.js";
+import mongoose from "mongoose";
 
 const router = Router();
 
-router.route("/balance").get(async (req, res) => {
+// ✅
+router.route("/balance").get(authMiddleware, async (req, res) => {
   // add middleware
-  const findBalance = await Account.findOne({ userId: req.user });
+  console.log(req.userId);
+  const findBalance = await Account.findOne({ userId: req.userId });
 
   return res.status(200).json({
-    balance: 100,
+    balance: findBalance.balance,
   });
 });
 
-router.route("/account/transfer").get(async (req, res) => {
-  const { to, amount } = req.body;
-  // {
-  //   to: string,
-  //   amount: number
-  //   }
-
-  // decrease balance from current user
-  // increase balance of `to` user
-
+router.route("/transfer").post(async (req, res) => {
   try {
+    
+    const session = await mongoose.startSession()
+    const { to, amount } = req.body;
+    console.log(to, amount)
+
+    // decrease balance from current user
+    // increase balance of `to` user
+    
     await Account.update(
-      { username },
+      { userId: req.userId },
       {
         $inc: {
           balance: -amount,
