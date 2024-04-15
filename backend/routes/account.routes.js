@@ -18,42 +18,56 @@ router.route("/balance").get(authMiddleware, async (req, res) => {
 
 router.route("/transfer").post(async (req, res) => {
   try {
-    
-    const session = await mongoose.startSession()
+    const session = await mongoose.startSession();
     const { to, amount } = req.body;
-    console.log(to, amount)
+    console.log(to, amount);
 
-    // decrease balance from current user
-    // increase balance of `to` user
-    
-    await Account.update(
+    // S1: find from current sending user
+    // S2: check his balance amount is suffienct to send the required amount
+    // S3: check if `to` user exists, if he exists then
+    // S4: decrease balance from current user
+    // S5: increase balance of `to` user
+
+    session.startTransaction();
+
+    const fromAccount = await Account.findOne({ userId: req.userId }).session(
+      session
+    );
+
+    if (!fromAccount || fromAccount.balance < amount) {
+      await session.abortTransaction();
+      return res
+        .status(400)
+        .json({ message: "Insufficient balance to transfer" });
+    }
+
+    const toAccount = await Account.findOne({ userId: to }).session(session);
+
+    if (!toAccount) {
+      await session.abortTransaction();
+      return res
+        .status(400)
+        .json({ message: "No such user found to transfer money" });
+    }
+
+    await Account.updateOne(
       { userId: req.userId },
-      {
-        $inc: {
-          balance: -amount,
-        },
-      }
+      { $inc: { balance: amount } }
+    ).session(session);
+
+    Account.updateOne({ userId: to }, { $inc: { balance: -amount } }).session(
+      session
     );
 
-    await Account.update(
-      { to },
-      {
-        $inc: {
-          balance: amount,
-        },
-      }
-    );
-
-    // {
-    // message: "Insufficient balance"
-    // }
+    session.commitTransaction();
 
     return res.status(200).json({
       message: "Transfer successful",
     });
   } catch (error) {
-    return res.status(200).json({
-      message: "Invalid account",
+    console.log(error)
+    return res.status(400).json({
+      message: "Other error",
     });
   }
 });
